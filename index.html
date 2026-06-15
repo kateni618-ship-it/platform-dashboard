@@ -363,6 +363,23 @@
       transform: translateX(-50%) rotate(45deg);
     }
 
+    .funnel .info-tip::after {
+      top: calc(100% + 8px);
+      bottom: auto;
+      z-index: 80;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .funnel .info-tip::before {
+      top: calc(100% + 3px);
+      bottom: auto;
+      z-index: 81;
+    }
+
+    .funnel .info-tip:hover::after {
+      transform: translateX(-50%) translateY(0);
+    }
+
     .metric-value {
       margin-top: 10px;
       font-size: 28px;
@@ -430,7 +447,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #fff;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .panel-head {
@@ -549,6 +566,10 @@
 
     .funnel-row:nth-child(7) {
       background: linear-gradient(90deg, #172554, #064e3b);
+    }
+
+    .funnel-row:nth-child(9) {
+      background: linear-gradient(90deg, #0f172a, #064e3b);
     }
 
     .funnel-text {
@@ -1193,14 +1214,17 @@
           { title: "推广分享漏斗", steps: [
             { label: "登录", value: 94280 },
             { label: "promote", value: 80000 },
-            { label: "share link", value: 70000 }
+            { label: "share link", value: 70000 },
+            { label: "生成ai素材", value: 56000 }
           ] }
         ],
         usersMuseland: [
           { title: "Museland 创作漏斗", steps: [
             { label: "museland浏览", value: 1000 },
             { label: "设计印花", value: 500 },
-            { label: "发布商品", value: 200 }
+            { label: "发布商品", value: 200 },
+            { label: "生成ai素材", value: 120 },
+            { label: "publish ai素材", value: 80 }
           ] }
         ],
         effect: [
@@ -1251,10 +1275,12 @@
       "登录": "进入推广分享路径的登录用户数。",
       "promote": "点击 Promote 或生成推广链接的用户数。",
       "share link": "分享或复制推广链接的用户数。",
-      "Museland 创作漏斗": "从进入 Museland，到设计印花，再到发布商品的用户转化路径。",
+      "生成ai素材": "在对应路径中成功生成 AI 素材的用户数。",
+      "Museland 创作漏斗": "从进入 Museland，到设计印花、发布商品，再到生成和发布 AI 素材的用户转化路径。",
       "museland浏览": "访问 Museland/POD 模块的用户数。",
       "设计印花": "进入或完成印花设计的用户数。",
       "发布商品": "成功发布 Museland/POD 商品的用户数。",
+      "publish ai素材": "发布已生成 AI 素材的用户数。",
       "上架商品数": "当前处于上架状态、可被用户看到或购买的商品数。",
       "曝光商品数": "当前筛选范围内获得过曝光的商品数。",
       "曝光率": "曝光商品数占上架商品数的比例。",
