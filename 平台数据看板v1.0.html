@@ -30,7 +30,7 @@
       line-height: 1.45;
     }
 
-    button, select {
+    button, select, input {
       font: inherit;
     }
 
@@ -363,6 +363,23 @@
       transform: translateX(-50%) rotate(45deg);
     }
 
+    .funnel .info-tip::after {
+      top: calc(100% + 8px);
+      bottom: auto;
+      z-index: 80;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .funnel .info-tip::before {
+      top: calc(100% + 3px);
+      bottom: auto;
+      z-index: 81;
+    }
+
+    .funnel .info-tip:hover::after {
+      transform: translateX(-50%) translateY(0);
+    }
+
     .metric-value {
       margin-top: 10px;
       font-size: 28px;
@@ -430,7 +447,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: #fff;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .panel-head {
@@ -551,6 +568,10 @@
       background: linear-gradient(90deg, #172554, #064e3b);
     }
 
+    .funnel-row:nth-child(9) {
+      background: linear-gradient(90deg, #0f172a, #064e3b);
+    }
+
     .funnel-text {
       display: grid;
       gap: 2px;
@@ -577,7 +598,32 @@
     .filter-row {
       display: flex;
       justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-filter {
+      height: 39px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .checkbox-filter input {
+      width: 15px;
+      height: 15px;
+      margin: 0;
+      accent-color: var(--blue);
     }
 
     .dropdown-filter {
@@ -893,6 +939,11 @@
         width: 100%;
       }
 
+      .checkbox-filter {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
       .metric-value {
         font-size: 24px;
       }
@@ -1031,6 +1082,10 @@
         </div>
         <div class="content">
           <div class="filter-row">
+            <label class="checkbox-filter">
+              <input type="checkbox" id="podOnlyToggle" />
+              <span>仅看POD商品</span>
+            </label>
             <div class="dropdown-filter" id="productCategoryFilter">
               <button class="dropdown-trigger" type="button" id="productCategoryTrigger" aria-expanded="false">
                 <span id="productCategoryLabel">全部类目</span>
@@ -1073,6 +1128,7 @@
       customStart: "",
       customEnd: "",
       productCategories: ["all"],
+      podOnly: false,
       filterVisitors: true,
       userTab: "login",
       activeMetric: {
@@ -1117,9 +1173,10 @@
       all: { label: "全部类目", factor: 1, rateFactor: 1 },
       dress: { label: "连衣裙", factor: .34, rateFactor: 1.08 },
       top: { label: "上衣", factor: .28, rateFactor: .96 },
-      bottom: { label: "下装", factor: .18, rateFactor: .91 },
-      pod: { label: "POD商品", factor: .2, rateFactor: 1.14 }
+      bottom: { label: "下装", factor: .18, rateFactor: .91 }
     };
+
+    const podProductFilter = { label: "仅POD", factor: .2, rateFactor: 1.14 };
 
     const base = {
       usersCardGroups: [
@@ -1166,16 +1223,16 @@
         { group: "AI Create分析", label: "ai create publish商品数", value: 940, suffix: "", change: "+9.8%" }
       ],
       products: [
-        { name: "Botanical Resort Midi Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$78.00", category: "dress", tags: ["度假", "高曝光"], stats: { exposure: 18420, pdp: 6320, picks: 1180, promote: 840, share: 620, createClick: 420, createPublish: 96, createShareDownload: 184 } },
-        { name: "Aurelia Blue Bloom Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$86.00", category: "dress", tags: ["Picks", "AI素材"], stats: { exposure: 16280, pdp: 5880, picks: 1360, promote: 760, share: 540, createClick: 510, createPublish: 142, createShareDownload: 230 } },
-        { name: "Rose Noir Mini Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$69.00", category: "dress", tags: ["Promote", "Share Link"], stats: { exposure: 12940, pdp: 4120, picks: 860, promote: 920, share: 710, createClick: 280, createPublish: 54, createShareDownload: 128 } },
-        { name: "Linen Square Neck Top", image: "../museland-demo/assets/placeholder-product.png", price: "$42.00", category: "top", tags: ["PDP高浏览", "夏季"], stats: { exposure: 14200, pdp: 5020, picks: 720, promote: 510, share: 360, createClick: 210, createPublish: 42, createShareDownload: 88 } },
-        { name: "Soft Rib Knit Cami", image: "../museland-demo/assets/placeholder-product.png", price: "$28.00", category: "top", tags: ["高点击", "基础款"], stats: { exposure: 11180, pdp: 4680, picks: 640, promote: 430, share: 290, createClick: 170, createPublish: 28, createShareDownload: 76 } },
-        { name: "Wide Leg Resort Pants", image: "../museland-demo/assets/placeholder-product.png", price: "$58.00", category: "bottom", tags: ["Picks", "套装"], stats: { exposure: 9340, pdp: 2860, picks: 590, promote: 380, share: 240, createClick: 120, createPublish: 18, createShareDownload: 50 } },
-        { name: "Pleated Satin Skirt", image: "../museland-demo/assets/placeholder-product.png", price: "$52.00", category: "bottom", tags: ["Promote", "通勤"], stats: { exposure: 8720, pdp: 2540, picks: 420, promote: 450, share: 260, createClick: 104, createPublish: 16, createShareDownload: 44 } },
-        { name: "Custom Bloom POD Tee", image: "../museland-demo/assets/placeholder-product.png", price: "$36.00", category: "pod", tags: ["AI Create", "已发布"], stats: { exposure: 7680, pdp: 2160, picks: 360, promote: 310, share: 280, createClick: 620, createPublish: 180, createShareDownload: 340 } },
-        { name: "Creator Pattern Tote", image: "../museland-demo/assets/placeholder-product.png", price: "$32.00", category: "pod", tags: ["印花设计", "Share/Download"], stats: { exposure: 6480, pdp: 1880, picks: 310, promote: 220, share: 250, createClick: 540, createPublish: 132, createShareDownload: 360 } },
-        { name: "Muse Floral Hoodie", image: "../museland-demo/assets/placeholder-product.png", price: "$64.00", category: "pod", tags: ["高转化", "Publish"], stats: { exposure: 5820, pdp: 1720, picks: 280, promote: 260, share: 190, createClick: 460, createPublish: 154, createShareDownload: 270 } }
+        { name: "Botanical Resort Midi Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$78.00", category: "dress", isPod: false, tags: ["度假", "高曝光"], stats: { exposure: 18420, pdp: 6320, picks: 1180, promote: 840, share: 620, createClick: 420, createPublish: 96, createShareDownload: 184 } },
+        { name: "Aurelia Blue Bloom Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$86.00", category: "dress", isPod: false, tags: ["Picks", "AI素材"], stats: { exposure: 16280, pdp: 5880, picks: 1360, promote: 760, share: 540, createClick: 510, createPublish: 142, createShareDownload: 230 } },
+        { name: "Rose Noir Mini Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$69.00", category: "dress", isPod: false, tags: ["Promote", "Share Link"], stats: { exposure: 12940, pdp: 4120, picks: 860, promote: 920, share: 710, createClick: 280, createPublish: 54, createShareDownload: 128 } },
+        { name: "Linen Square Neck Top", image: "../museland-demo/assets/placeholder-product.png", price: "$42.00", category: "top", isPod: false, tags: ["PDP高浏览", "夏季"], stats: { exposure: 14200, pdp: 5020, picks: 720, promote: 510, share: 360, createClick: 210, createPublish: 42, createShareDownload: 88 } },
+        { name: "Soft Rib Knit Cami", image: "../museland-demo/assets/placeholder-product.png", price: "$28.00", category: "top", isPod: false, tags: ["高点击", "基础款"], stats: { exposure: 11180, pdp: 4680, picks: 640, promote: 430, share: 290, createClick: 170, createPublish: 28, createShareDownload: 76 } },
+        { name: "Wide Leg Resort Pants", image: "../museland-demo/assets/placeholder-product.png", price: "$58.00", category: "bottom", isPod: false, tags: ["Picks", "套装"], stats: { exposure: 9340, pdp: 2860, picks: 590, promote: 380, share: 240, createClick: 120, createPublish: 18, createShareDownload: 50 } },
+        { name: "Pleated Satin Skirt", image: "../museland-demo/assets/placeholder-product.png", price: "$52.00", category: "bottom", isPod: false, tags: ["Promote", "通勤"], stats: { exposure: 8720, pdp: 2540, picks: 420, promote: 450, share: 260, createClick: 104, createPublish: 16, createShareDownload: 44 } },
+        { name: "Custom Bloom POD Tee", image: "../museland-demo/assets/placeholder-product.png", price: "$36.00", category: "top", isPod: true, tags: ["POD", "AI Create", "已发布"], stats: { exposure: 7680, pdp: 2160, picks: 360, promote: 310, share: 280, createClick: 620, createPublish: 180, createShareDownload: 340 } },
+        { name: "Creator Pattern Tote", image: "../museland-demo/assets/placeholder-product.png", price: "$32.00", category: "bottom", isPod: true, tags: ["POD", "印花设计", "Share/Download"], stats: { exposure: 6480, pdp: 1880, picks: 310, promote: 220, share: 250, createClick: 540, createPublish: 132, createShareDownload: 360 } },
+        { name: "Muse Floral Hoodie", image: "../museland-demo/assets/placeholder-product.png", price: "$64.00", category: "top", isPod: true, tags: ["POD", "高转化", "Publish"], stats: { exposure: 5820, pdp: 1720, picks: 280, promote: 260, share: 190, createClick: 460, createPublish: 154, createShareDownload: 270 } }
       ],
       charts: {
         users: {
@@ -1193,14 +1250,17 @@
           { title: "推广分享漏斗", steps: [
             { label: "登录", value: 94280 },
             { label: "promote", value: 80000 },
-            { label: "share link", value: 70000 }
+            { label: "share link", value: 70000 },
+            { label: "生成ai素材", value: 56000 }
           ] }
         ],
         usersMuseland: [
           { title: "Museland 创作漏斗", steps: [
             { label: "museland浏览", value: 1000 },
             { label: "设计印花", value: 500 },
-            { label: "发布商品", value: 200 }
+            { label: "发布商品", value: 200 },
+            { label: "生成ai素材", value: 120 },
+            { label: "publish ai素材", value: 80 }
           ] }
         ],
         effect: [
@@ -1251,10 +1311,12 @@
       "登录": "进入推广分享路径的登录用户数。",
       "promote": "点击 Promote 或生成推广链接的用户数。",
       "share link": "分享或复制推广链接的用户数。",
-      "Museland 创作漏斗": "从进入 Museland，到设计印花，再到发布商品的用户转化路径。",
+      "生成ai素材": "在对应路径中成功生成 AI 素材的用户数。",
+      "Museland 创作漏斗": "从进入 Museland，到设计印花、发布商品，再到生成和发布 AI 素材的用户转化路径。",
       "museland浏览": "访问 Museland/POD 模块的用户数。",
       "设计印花": "进入或完成印花设计的用户数。",
       "发布商品": "成功发布 Museland/POD 商品的用户数。",
+      "publish ai素材": "发布已生成 AI 素材的用户数。",
       "上架商品数": "当前处于上架状态、可被用户看到或购买的商品数。",
       "曝光商品数": "当前筛选范围内获得过曝光的商品数。",
       "曝光率": "曝光商品数占上架商品数的比例。",
@@ -1405,14 +1467,21 @@
       return state.productCategories.map((key) => productCategories[key].label).join("、");
     }
 
+    function productFilterLabel() {
+      return state.podOnly ? `${podProductFilter.label} · ${productCategoryLabel()}` : productCategoryLabel();
+    }
+
     function productCategoryFactor() {
-      if (state.productCategories.includes("all")) return 1;
-      return state.productCategories.reduce((sum, key) => sum + productCategories[key].factor, 0);
+      const categoryFactor = state.productCategories.includes("all")
+        ? 1
+        : state.productCategories.reduce((sum, key) => sum + productCategories[key].factor, 0);
+      return state.podOnly ? categoryFactor * podProductFilter.factor : categoryFactor;
     }
 
     function productRateFactor() {
       const keys = selectedProductCategoryKeys();
-      return keys.reduce((sum, key) => sum + productCategories[key].rateFactor, 0) / keys.length;
+      const categoryRateFactor = keys.reduce((sum, key) => sum + productCategories[key].rateFactor, 0) / keys.length;
+      return state.podOnly ? categoryRateFactor * podProductFilter.rateFactor : categoryRateFactor;
     }
 
     function productCardValue(card) {
@@ -1466,6 +1535,7 @@
 
     function renderProductCategoryFilter() {
       document.getElementById("productCategoryLabel").textContent = productCategoryLabel();
+      document.getElementById("podOnlyToggle").checked = state.podOnly;
       const el = document.getElementById("productCategoryMenu");
       el.innerHTML = Object.entries(productCategories).map(([key, category]) => `
         <label class="dropdown-option">
@@ -1542,7 +1612,7 @@
               <article class="metric-card">
                 <div class="metric-label">
                   ${labelWithInfo(card.label)}
-                  <span>${productCategoryLabel()}</span>
+                  <span>${productFilterLabel()}</span>
                 </div>
                 <div class="metric-value-line">
                   <button class="metric-value metric-value-button" type="button" data-product-metric="${card.label}">
@@ -1559,9 +1629,10 @@
     }
 
     function productsForCurrentCategory(metric) {
-      const selected = state.productCategories.includes("all")
-        ? base.products
-        : base.products.filter((product) => state.productCategories.includes(product.category));
+      const selected = base.products.filter((product) => {
+        const categoryMatched = state.productCategories.includes("all") || state.productCategories.includes(product.category);
+        return categoryMatched && (!state.podOnly || product.isPod);
+      });
       return [...selected].sort((a, b) => metricSortValue(b, metric) - metricSortValue(a, metric));
     }
 
@@ -1601,7 +1672,7 @@
       const modal = document.getElementById("productModal");
       const products = productsForCurrentCategory(metric);
       document.getElementById("productModalTitle").textContent = metric;
-      document.getElementById("productModalMeta").textContent = `${currentPeriodLabel()} · ${productCategoryLabel()} · 按${metric}降序 · ${products.length} 个商品`;
+      document.getElementById("productModalMeta").textContent = `${currentPeriodLabel()} · ${productFilterLabel()} · 按${metric}降序 · ${products.length} 个商品`;
       document.getElementById("productList").innerHTML = `
         <table class="product-table">
           <thead>
@@ -1869,6 +1940,11 @@
         else current.delete(key);
         state.productCategories = current.size ? [...current] : ["all"];
       }
+      renderAll();
+    });
+
+    document.getElementById("podOnlyToggle").addEventListener("change", (event) => {
+      state.podOnly = event.target.checked;
       renderAll();
     });
 
