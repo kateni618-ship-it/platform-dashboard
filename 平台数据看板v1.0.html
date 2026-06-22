@@ -443,6 +443,13 @@
       align-items: stretch;
     }
 
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+
     .panel {
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -528,6 +535,35 @@
 
     .funnel {
       padding: 14px;
+    }
+
+    .funnel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .funnel-head .panel-title {
+      margin: 0;
+    }
+
+    .funnel-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .funnel-filter input {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: var(--blue);
     }
 
     .funnel-block + .funnel-block {
@@ -912,6 +948,10 @@
         grid-template-columns: 1fr;
       }
 
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
       .filter-row {
         justify-content: flex-start;
       }
@@ -1061,12 +1101,15 @@
             </div>
             <div class="chart-wrap" data-chart="users"></div>
           </div>
-          <div class="grid-2 user-tab-panel" data-user-panel="core" hidden>
+          <div class="grid-3 user-tab-panel" data-user-panel="core" hidden>
             <div class="panel">
               <div class="funnel" data-funnel="usersPromote"></div>
             </div>
             <div class="panel">
               <div class="funnel" data-funnel="usersMuseland"></div>
+            </div>
+            <div class="panel">
+              <div class="funnel" data-funnel="usersAiCreate"></div>
             </div>
           </div>
         </div>
@@ -1129,6 +1172,8 @@
       customEnd: "",
       productCategories: ["all"],
       podOnly: false,
+      promoteFunnelPodOnly: false,
+      aiFunnelPodOnly: false,
       filterVisitors: true,
       userTab: "login",
       activeMetric: {
@@ -1190,7 +1235,7 @@
           { label: "活跃picks", value: 35600, suffix: "", change: "+10.1%", visitorAffected: true },
           { label: "活跃promote", value: 28400, suffix: "", change: "+8.7%", visitorAffected: true },
           { label: "活跃pick+promote", value: 17600, suffix: "", change: "+7.9%", visitorAffected: true },
-          { label: "用户pick率", value: 37.8, suffix: "%", change: "+2.4pp", fixed: true, decimals: 1, visitorAffected: true }
+          { label: "用户pick+promote率", value: 37.8, suffix: "%", change: "+2.4pp", fixed: true, decimals: 1, visitorAffected: true }
         ] },
         { key: "core", title: "AI Create", cards: [
           { label: "活跃ai create", value: 12400, suffix: "", change: "+13.5%", visitorAffected: true },
@@ -1247,20 +1292,26 @@
       },
       funnels: {
         usersPromote: [
-          { title: "推广分享漏斗", steps: [
+          { title: "推广分享漏斗", podToggle: "promoteFunnelPodOnly", podFactor: .17, steps: [
             { label: "登录", value: 94280 },
             { label: "promote", value: 80000 },
-            { label: "share link", value: 70000 },
-            { label: "生成ai素材", value: 56000 }
+            { label: "share link", value: 70000 }
           ] }
         ],
         usersMuseland: [
           { title: "Museland 创作漏斗", steps: [
             { label: "museland浏览", value: 1000 },
             { label: "设计印花", value: 500 },
-            { label: "发布商品", value: 200 },
-            { label: "生成ai素材", value: 120 },
-            { label: "publish ai素材", value: 80 }
+            { label: "发布商品", value: 200 }
+          ] }
+        ],
+        usersAiCreate: [
+          { title: "AI 内容创作漏斗", podToggle: "aiFunnelPodOnly", podFactor: .28, steps: [
+            { label: "登录", value: 94280 },
+            { label: "活跃ai create", value: 12400 },
+            { label: "活跃生成ai素材", value: 8600 },
+            { label: "活跃publish ai素材", value: 2200 },
+            { label: "活跃share/download ai素材", value: 1680 }
           ] }
         ],
         effect: [
@@ -1298,7 +1349,7 @@
       "活跃picks": "当前筛选范围内发生过 Pick 行为的用户数。",
       "活跃promote": "当前筛选范围内发生过 Promote 或生成推广链接的用户数。",
       "活跃pick+promote": "当前筛选范围内 Pick 或 Promote 的用户数。",
-      "用户pick率": "登录用户中发生 Pick 行为的比例。",
+      "用户pick+promote率": "登录用户中发生 Pick 或 Promote 行为的比例。",
       "活跃ai create": "当前筛选范围内使用过 AI Create 的用户数。",
       "用户create率": "登录用户中使用 AI Create 的比例。",
       "活跃生成ai素材": "当前筛选范围内成功生成 AI 素材的用户数。",
@@ -1308,15 +1359,14 @@
       "活跃pod印花设计": "当前筛选范围内进入或完成 POD 印花设计的用户数。",
       "活跃发布pod商品": "当前筛选范围内发布过 POD 商品的用户数。",
       "推广分享漏斗": "从登录到 Promote，再到 Share Link 的用户转化路径。",
-      "登录": "进入推广分享路径的登录用户数。",
+      "登录": "当前漏斗起点的登录用户数。",
       "promote": "点击 Promote 或生成推广链接的用户数。",
       "share link": "分享或复制推广链接的用户数。",
-      "生成ai素材": "在对应路径中成功生成 AI 素材的用户数。",
-      "Museland 创作漏斗": "从进入 Museland，到设计印花、发布商品，再到生成和发布 AI 素材的用户转化路径。",
+      "Museland 创作漏斗": "从进入 Museland，到设计印花、发布商品的用户转化路径。",
       "museland浏览": "访问 Museland/POD 模块的用户数。",
       "设计印花": "进入或完成印花设计的用户数。",
       "发布商品": "成功发布 Museland/POD 商品的用户数。",
-      "publish ai素材": "发布已生成 AI 素材的用户数。",
+      "AI 内容创作漏斗": "从登录到 AI Create、生成、发布、分享或下载 AI 素材的用户转化路径。",
       "上架商品数": "当前处于上架状态、可被用户看到或购买的商品数。",
       "曝光商品数": "当前筛选范围内获得过曝光的商品数。",
       "曝光率": "曝光商品数占上架商品数的比例。",
@@ -1815,13 +1865,28 @@
       return `${Math.round(value)}`;
     }
 
+    function funnelValue(group, funnel, step) {
+      const podFactor = funnel.podToggle && state[funnel.podToggle] ? funnel.podFactor : 1;
+      return valueFor(group, step.value) * podFactor;
+    }
+
+    function funnelFilterControl(funnel) {
+      if (!funnel.podToggle) return "";
+      return `
+        <label class="funnel-filter">
+          <input type="checkbox" data-funnel-pod-toggle="${funnel.podToggle}" ${state[funnel.podToggle] ? "checked" : ""} />
+          <span>仅看POD商品</span>
+        </label>
+      `;
+    }
+
     function renderFunnel(group) {
       const el = document.querySelector(`[data-funnel="${group}"]`);
       el.innerHTML = base.funnels[group].map((funnel) => {
-        const first = valueFor(group, funnel.steps[0].value);
+        const first = funnelValue(group, funnel, funnel.steps[0]);
         const rows = funnel.steps.map((step, index) => {
-          const current = valueFor(group, step.value);
-          const prev = index === 0 ? current : valueFor(group, funnel.steps[index - 1].value);
+          const current = funnelValue(group, funnel, step);
+          const prev = index === 0 ? current : funnelValue(group, funnel, funnel.steps[index - 1]);
           const width = Math.max(28, current / first * 100);
           const rate = index === 0 ? "起点" : `上一步转化率 ${Math.round(current / prev * 100)}%`;
           return `
@@ -1834,7 +1899,15 @@
             <div class="rate">${rate}</div>
           `;
         }).join("");
-        return `<div class="funnel-block"><h3 class="panel-title">${labelWithInfo(funnel.title)}</h3><div class="funnel-shape">${rows}</div></div>`;
+        return `
+          <div class="funnel-block">
+            <div class="funnel-head">
+              <h3 class="panel-title">${labelWithInfo(funnel.title)}</h3>
+              ${funnelFilterControl(funnel)}
+            </div>
+            <div class="funnel-shape">${rows}</div>
+          </div>
+        `;
       }).join("");
     }
 
@@ -1849,7 +1922,7 @@
         renderTabs(group);
         renderChart(group);
       });
-      ["usersPromote", "usersMuseland", "effect"].forEach(renderFunnel);
+      ["usersPromote", "usersMuseland", "usersAiCreate", "effect"].forEach(renderFunnel);
     }
 
     function renderModule() {
@@ -1957,6 +2030,13 @@
 
     document.getElementById("visitorFilterToggle").addEventListener("change", (event) => {
       state.filterVisitors = event.target.checked;
+      renderAll();
+    });
+
+    document.body.addEventListener("change", (event) => {
+      const toggleKey = event.target.dataset.funnelPodToggle;
+      if (!toggleKey) return;
+      state[toggleKey] = event.target.checked;
       renderAll();
     });
 
