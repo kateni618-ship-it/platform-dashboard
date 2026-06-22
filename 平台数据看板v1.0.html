@@ -1,0 +1,1997 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MUSE 平台数据看板 v1.0</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #6b7280;
+      --line: #dde3ea;
+      --blue: #2563eb;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --ink: #111827;
+      --shadow: 0 10px 28px rgba(15, 23, 42, .08);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    button, select, input {
+      font: inherit;
+    }
+
+    .page {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, .94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .title h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .last-updated {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .time-detail {
+      display: none;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .time-detail.show {
+      display: flex;
+    }
+
+    .time-select,
+    .date-input {
+      height: 37px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 10px;
+      font-size: 13px;
+    }
+
+    .date-input {
+      width: 142px;
+    }
+
+    .date-separator {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .module-nav {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px 14px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .module-nav button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 9px 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .module-nav button.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .segmented {
+      display: inline-flex;
+      padding: 3px;
+      background: #eef2f7;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      gap: 3px;
+    }
+
+    .segmented button,
+    .ghost-btn {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .segmented button.active {
+      background: var(--ink);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(17, 24, 39, .16);
+    }
+
+    .ghost-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .section {
+      margin-bottom: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section[hidden] {
+      display: none;
+    }
+
+    .section-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .content {
+      padding: 18px 20px 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .user-card-groups {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .product-card-groups {
+      display: grid;
+      gap: 16px;
+    }
+
+    .user-view-tabs {
+      display: flex;
+      margin-bottom: 14px;
+      overflow-x: auto;
+    }
+
+    .user-tab-panel[hidden] {
+      display: none;
+    }
+
+    .wide-panel {
+      margin-bottom: 16px;
+    }
+
+    .user-card-group {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 14px;
+    }
+
+    .product-card-group {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 14px;
+    }
+
+    .user-card-group h3,
+    .product-card-group h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .user-card-group .cards,
+    .product-card-group .cards {
+      margin-bottom: 0;
+    }
+
+    .metric-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: #fff;
+      min-height: 116px;
+    }
+
+    .metric-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .label-with-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .info-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 50%;
+      color: var(--muted);
+      background: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: help;
+      flex: 0 0 auto;
+    }
+
+    .info-tip::after {
+      content: attr(data-info);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      z-index: 25;
+      width: max-content;
+      max-width: 240px;
+      transform: translateX(-50%) translateY(4px);
+      border-radius: 6px;
+      background: #111827;
+      color: #fff;
+      padding: 7px 9px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.45;
+      text-align: left;
+      white-space: normal;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: var(--shadow);
+      transition: .15s ease;
+    }
+
+    .info-tip::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 3px);
+      z-index: 26;
+      width: 8px;
+      height: 8px;
+      background: #111827;
+      transform: translateX(-50%) rotate(45deg);
+      opacity: 0;
+      pointer-events: none;
+      transition: .15s ease;
+    }
+
+    .info-tip:hover::after,
+    .info-tip:hover::before {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .info-tip:hover::before {
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .funnel .info-tip::after {
+      top: calc(100% + 8px);
+      bottom: auto;
+      z-index: 80;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .funnel .info-tip::before {
+      top: calc(100% + 3px);
+      bottom: auto;
+      z-index: 81;
+    }
+
+    .funnel .info-tip:hover::after {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .metric-value {
+      margin-top: 10px;
+      font-size: 28px;
+      font-weight: 760;
+      letter-spacing: 0;
+      color: var(--text);
+    }
+
+    .metric-value-line {
+      margin-top: 10px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .metric-value-line .metric-value {
+      margin-top: 0;
+    }
+
+    .metric-rate {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 22px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1d4ed8;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .metric-note {
+      margin-top: 6px;
+      color: var(--green);
+      font-size: 12px;
+    }
+
+    .metric-value-button {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      padding: 0;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .metric-value-button:hover {
+      color: var(--blue);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(320px, .8fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      overflow: visible;
+    }
+
+    .panel-head {
+      padding: 14px 14px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .chart-tabs button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      color: var(--muted);
+      padding: 5px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .chart-tabs button.active {
+      color: #fff;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .chart-wrap {
+      padding: 8px 12px 12px;
+      min-height: 302px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 270px;
+    }
+
+    .axis {
+      stroke: #d8dee8;
+      stroke-width: 1;
+    }
+
+    .series-line {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .series-area {
+      fill: rgba(37, 99, 235, .1);
+    }
+
+    .dot {
+      fill: #fff;
+      stroke: var(--blue);
+      stroke-width: 2;
+    }
+
+    .axis-label,
+    .value-label {
+      fill: var(--muted);
+      font-size: 11px;
+    }
+
+    .funnel {
+      padding: 14px;
+    }
+
+    .funnel-block + .funnel-block {
+      margin-top: 22px;
+    }
+
+    .funnel-shape {
+      margin-top: 14px;
+    }
+
+    .funnel-row {
+      position: relative;
+      height: 58px;
+      margin: 0 auto 8px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      clip-path: polygon(6% 0, 94% 0, 82% 100%, 18% 100%);
+      background: linear-gradient(90deg, #2563eb, #059669);
+      min-width: 150px;
+    }
+
+    .funnel-row:nth-child(2) {
+      background: linear-gradient(90deg, #1d4ed8, #0d9488);
+    }
+
+    .funnel-row:nth-child(3) {
+      background: linear-gradient(90deg, #1e40af, #047857);
+    }
+
+    .funnel-row:nth-child(5) {
+      background: linear-gradient(90deg, #1e3a8a, #03634f);
+    }
+
+    .funnel-row:nth-child(7) {
+      background: linear-gradient(90deg, #172554, #064e3b);
+    }
+
+    .funnel-row:nth-child(9) {
+      background: linear-gradient(90deg, #0f172a, #064e3b);
+    }
+
+    .funnel-text {
+      display: grid;
+      gap: 2px;
+      padding: 0 20px;
+    }
+
+    .funnel-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .funnel-value {
+      font-size: 16px;
+      font-weight: 760;
+    }
+
+    .rate {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      margin: -2px 0 8px;
+    }
+
+    .filter-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-filter {
+      height: 39px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .checkbox-filter input {
+      width: 15px;
+      height: 15px;
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .dropdown-filter {
+      position: relative;
+      min-width: 220px;
+    }
+
+    .dropdown-trigger {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 9px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      text-align: left;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 12;
+      width: 240px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 8px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .dropdown-menu[hidden] {
+      display: none;
+    }
+
+    .dropdown-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .dropdown-option:hover {
+      background: #f8fafc;
+    }
+
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .product-tags small {
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: var(--muted);
+      padding: 3px 7px;
+      font-size: 11px;
+    }
+
+    .product-table-wrap {
+      overflow: auto;
+    }
+
+    .product-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1120px;
+    }
+
+    .product-table th,
+    .product-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .product-table th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .product-info {
+      display: grid;
+      grid-template-columns: 48px minmax(180px, 1fr);
+      gap: 10px;
+      align-items: center;
+      white-space: normal;
+    }
+
+    .product-info img {
+      width: 48px;
+      height: 60px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #eef2f7;
+    }
+
+    .product-info strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .product-info span {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgba(15, 23, 42, .42);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .modal {
+      width: min(980px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .modal-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .modal-head h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .modal-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .modal-body {
+      overflow: auto;
+      padding: 16px 18px 18px;
+    }
+
+    .toggle-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-filter input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toggle-track {
+      width: 40px;
+      height: 22px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      position: relative;
+      transition: .2s ease;
+    }
+
+    .toggle-track::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      top: 2px;
+      left: 2px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, .22);
+      transition: .2s ease;
+    }
+
+    .toggle-filter input:checked + .toggle-track {
+      background: var(--blue);
+    }
+
+    .toggle-filter input:checked + .toggle-track::after {
+      transform: translateX(18px);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1d4ed8;
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      background: #111827;
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: .2s ease;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1040px) {
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-row {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner,
+      .module-nav,
+      main {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .section-head,
+      .panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .dropdown-filter {
+        width: 100%;
+      }
+
+      .checkbox-filter {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .metric-value {
+        font-size: 24px;
+      }
+
+      svg {
+        height: 240px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="title">
+          <h1>MUSE 平台数据看板 v1.0</h1>
+          <p>平台成效、用户行为与创作指标</p>
+          <div class="last-updated">数据最后更新时间：<span id="lastUpdatedTime"></span></div>
+        </div>
+        <div class="controls">
+          <div class="segmented" id="periodTabs" aria-label="时间范围">
+            <button data-period="total">累计</button>
+            <button data-period="yesterday">昨日</button>
+            <button class="active" data-period="7d">近7日</button>
+            <button data-period="month">月度</button>
+            <button data-period="quarter">季度</button>
+            <button data-period="year">年度</button>
+            <button data-period="custom">自定义</button>
+          </div>
+          <div class="time-detail" id="timeDetail">
+            <select class="time-select" id="timeRangeSelect" aria-label="选择时间线"></select>
+            <input class="date-input" type="date" id="customStartDate" aria-label="自定义开始日期" hidden />
+            <span class="date-separator" id="customDateSeparator" hidden>至</span>
+            <input class="date-input" type="date" id="customEndDate" aria-label="自定义结束日期" hidden />
+          </div>
+          <div class="segmented" id="grainTabs" aria-label="趋势维度">
+            <button class="active" data-grain="day">日</button>
+            <button data-grain="week">周</button>
+            <button data-grain="month">月</button>
+          </div>
+          <button class="ghost-btn" id="refreshBtn">刷新</button>
+        </div>
+      </div>
+      <nav class="module-nav" id="moduleTabs" aria-label="看板模块">
+        <button class="active" data-module="effect">平台成效</button>
+        <button data-module="users">用户维度</button>
+        <button data-module="products">商品维度</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="section" id="effect" data-section="effect">
+        <div class="section-head">
+          <div>
+            <h2>1. 平台成效</h2>
+            <p>GMV、订单数、销售件数、点击到购买转化</p>
+          </div>
+          <span class="tag">经营结果</span>
+        </div>
+        <div class="content">
+          <div class="filter-row">
+            <div class="segmented" id="effectFilterTabs" aria-label="平台成效筛选">
+              <button class="active" data-effect-filter="all">all</button>
+              <button data-effect-filter="product">商品推广</button>
+              <button data-effect-filter="collection">Collection推广</button>
+              <button data-effect-filter="museland">Museland商品推广</button>
+            </div>
+          </div>
+          <div class="cards" data-cards="effect"></div>
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-head">
+                <h3 class="panel-title">平台成效趋势图</h3>
+                <div class="chart-tabs" data-tabs="effect"></div>
+              </div>
+              <div class="chart-wrap" data-chart="effect"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h3 class="panel-title">成效漏斗</h3>
+              </div>
+              <div class="funnel" data-funnel="effect"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="users" data-section="users" hidden>
+        <div class="section-head">
+          <div>
+            <h2>2. 用户维度</h2>
+            <p>注册、登录、选品、AI Create、POD 设计行为</p>
+          </div>
+          <span class="tag">核心用户数据</span>
+        </div>
+        <div class="content">
+          <div class="filter-row">
+            <label class="toggle-filter">
+              <input type="checkbox" id="visitorFilterToggle" checked />
+              <span class="toggle-track"></span>
+              <span>过滤访客</span>
+            </label>
+          </div>
+          <div class="user-view-tabs">
+            <div class="segmented" id="userViewTabs" aria-label="用户维度切换">
+              <button class="active" data-user-tab="login">登录注册</button>
+              <button data-user-tab="core">核心行为分析</button>
+            </div>
+          </div>
+          <div class="user-card-groups" data-user-card-groups></div>
+          <div class="panel wide-panel user-tab-panel" data-user-panel="login">
+            <div class="panel-head">
+              <h3 class="panel-title">用户趋势图</h3>
+              <div class="chart-tabs" data-tabs="users"></div>
+            </div>
+            <div class="chart-wrap" data-chart="users"></div>
+          </div>
+          <div class="grid-2 user-tab-panel" data-user-panel="core" hidden>
+            <div class="panel">
+              <div class="funnel" data-funnel="usersPromote"></div>
+            </div>
+            <div class="panel">
+              <div class="funnel" data-funnel="usersMuseland"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="products" data-section="products" hidden>
+        <div class="section-head">
+          <div>
+            <h2>3. 商品维度</h2>
+            <p>商品上架、曝光、PDP、Picks、Promote、AI Create 行为</p>
+          </div>
+          <span class="tag">商品分析</span>
+        </div>
+        <div class="content">
+          <div class="filter-row">
+            <label class="checkbox-filter">
+              <input type="checkbox" id="podOnlyToggle" />
+              <span>仅看POD商品</span>
+            </label>
+            <div class="dropdown-filter" id="productCategoryFilter">
+              <button class="dropdown-trigger" type="button" id="productCategoryTrigger" aria-expanded="false">
+                <span id="productCategoryLabel">全部类目</span>
+                <span>⌄</span>
+              </button>
+              <div class="dropdown-menu" id="productCategoryMenu" hidden></div>
+            </div>
+          </div>
+          <div class="product-card-groups" data-cards="products"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="productModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+      <div class="modal-head">
+        <div>
+          <h3 id="productModalTitle">商品明细</h3>
+          <p id="productModalMeta">点击指标数值查看对应商品</p>
+        </div>
+        <button class="modal-close" type="button" id="productModalClose" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="product-table-wrap" id="productList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      period: "7d",
+      grain: "day",
+      module: "effect",
+      effectFilter: "all",
+      timeRangeValue: "",
+      customStart: "",
+      customEnd: "",
+      productCategories: ["all"],
+      podOnly: false,
+      filterVisitors: true,
+      userTab: "login",
+      activeMetric: {
+        users: "注册用户数",
+        effect: "GMV"
+      }
+    };
+
+    const periodLabels = {
+      total: "累计",
+      yesterday: "昨日",
+      "7d": "近7日",
+      month: "月度",
+      quarter: "季度",
+      year: "年度",
+      custom: "自定义"
+    };
+
+    const grainLabels = {
+      day: "日",
+      week: "周",
+      month: "月"
+    };
+
+    const multiplier = {
+      total: 1,
+      yesterday: .035,
+      "7d": .18,
+      month: .42,
+      quarter: .68,
+      year: .92
+    };
+
+    const effectFilters = {
+      all: { label: "all", factor: 1 },
+      product: { label: "商品推广", factor: .52 },
+      collection: { label: "Collection推广", factor: .31 },
+      museland: { label: "Museland商品推广", factor: .17 }
+    };
+
+    const productCategories = {
+      all: { label: "全部类目", factor: 1, rateFactor: 1 },
+      dress: { label: "连衣裙", factor: .34, rateFactor: 1.08 },
+      top: { label: "上衣", factor: .28, rateFactor: .96 },
+      bottom: { label: "下装", factor: .18, rateFactor: .91 }
+    };
+
+    const podProductFilter = { label: "仅POD", factor: .2, rateFactor: 1.14 };
+
+    const base = {
+      usersCardGroups: [
+        { key: "login", title: "登录注册", cards: [
+          { label: "注册数", value: 128430, suffix: "", change: "+12.6%" },
+          { label: "注册率", value: 18.6, suffix: "%", change: "+1.2pp", fixed: true, decimals: 1 },
+          { label: "登录数", value: 94280, suffix: "", change: "+9.4%" },
+          { label: "用户停留时长", value: 8.6, suffix: " 分钟", change: "+6.8%", fixed: true, decimals: 1, visitorAffected: true }
+        ] },
+        { key: "core", title: "选品", cards: [
+          { label: "活跃picks", value: 35600, suffix: "", change: "+10.1%", visitorAffected: true },
+          { label: "活跃promote", value: 28400, suffix: "", change: "+8.7%", visitorAffected: true },
+          { label: "活跃pick+promote", value: 17600, suffix: "", change: "+7.9%", visitorAffected: true },
+          { label: "用户pick率", value: 37.8, suffix: "%", change: "+2.4pp", fixed: true, decimals: 1, visitorAffected: true }
+        ] },
+        { key: "core", title: "AI Create", cards: [
+          { label: "活跃ai create", value: 12400, suffix: "", change: "+13.5%", visitorAffected: true },
+          { label: "用户create率", value: 13.2, suffix: "%", change: "+1.8pp", fixed: true, decimals: 1, visitorAffected: true },
+          { label: "活跃生成ai素材", value: 8600, suffix: "", change: "+12.0%", visitorAffected: true },
+          { label: "活跃publish ai素材", value: 2200, suffix: "", change: "+9.3%", visitorAffected: true },
+          { label: "活跃share/download ai素材", value: 5100, suffix: "", change: "+11.6%", visitorAffected: true }
+        ] },
+        { key: "core", title: "POD", cards: [
+          { label: "活跃pod浏览", value: 9600, suffix: "", change: "+8.2%", visitorAffected: true },
+          { label: "活跃pod印花设计", value: 4200, suffix: "", change: "+7.1%", visitorAffected: true },
+          { label: "活跃发布pod商品", value: 1180, suffix: "", change: "+5.9%", visitorAffected: true }
+        ] }
+      ],
+      effectCards: [
+        { label: "GMV", value: 3580000, suffix: " USD", change: "+18.2%" },
+        { label: "订单数", value: 49000, suffix: "", change: "+11.3%" },
+        { label: "销售件数", value: 52000, suffix: "", change: "+13.1%" },
+        { label: "动销商品数", value: 3684, suffix: "", change: "+9.5%", rateLabel: "动销率", rateValue: 20, rateSuffix: "%", rateDecimals: 0 },
+        { label: "订单均价", value: 73.06, suffix: " USD", change: "+6.2%", fixed: true, decimals: 2 }
+      ],
+      productCards: [
+        { group: "流量分析", label: "上架商品数", value: 18420, suffix: "", change: "+9.1%", periodIndependent: true },
+        { group: "流量分析", label: "曝光商品数", value: 12860, suffix: "", change: "+10.4%", rateLabel: "曝光率", rateValue: 69.8, rateSuffix: "%", rateDecimals: 1 },
+        { group: "流量分析", label: "pdp浏览商品数", value: 121000, suffix: "", change: "+13.8%", rateLabel: "点击率", rateValue: 18.4, rateSuffix: "%", rateDecimals: 1 },
+        { group: "选品转化分析", label: "picks商品数", value: 8420, suffix: "", change: "+8.9%", rateLabel: "pick率", rateValue: 11.7, rateSuffix: "%", rateDecimals: 1 },
+        { group: "选品转化分析", label: "promote商品数", value: 6360, suffix: "", change: "+7.6%" },
+        { group: "选品转化分析", label: "share link商品数", value: 5120, suffix: "", change: "+7.2%" },
+        { group: "AI Create分析", label: "ai create点击商品数", value: 3980, suffix: "", change: "+12.5%", rateLabel: "create率", rateValue: 5.6, rateSuffix: "%", rateDecimals: 1 },
+        { group: "AI Create分析", label: "ai create publish商品数", value: 940, suffix: "", change: "+9.8%" }
+      ],
+      products: [
+        { name: "Botanical Resort Midi Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$78.00", category: "dress", isPod: false, tags: ["度假", "高曝光"], stats: { exposure: 18420, pdp: 6320, picks: 1180, promote: 840, share: 620, createClick: 420, createPublish: 96, createShareDownload: 184 } },
+        { name: "Aurelia Blue Bloom Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$86.00", category: "dress", isPod: false, tags: ["Picks", "AI素材"], stats: { exposure: 16280, pdp: 5880, picks: 1360, promote: 760, share: 540, createClick: 510, createPublish: 142, createShareDownload: 230 } },
+        { name: "Rose Noir Mini Dress", image: "../museland-demo/assets/placeholder-product.png", price: "$69.00", category: "dress", isPod: false, tags: ["Promote", "Share Link"], stats: { exposure: 12940, pdp: 4120, picks: 860, promote: 920, share: 710, createClick: 280, createPublish: 54, createShareDownload: 128 } },
+        { name: "Linen Square Neck Top", image: "../museland-demo/assets/placeholder-product.png", price: "$42.00", category: "top", isPod: false, tags: ["PDP高浏览", "夏季"], stats: { exposure: 14200, pdp: 5020, picks: 720, promote: 510, share: 360, createClick: 210, createPublish: 42, createShareDownload: 88 } },
+        { name: "Soft Rib Knit Cami", image: "../museland-demo/assets/placeholder-product.png", price: "$28.00", category: "top", isPod: false, tags: ["高点击", "基础款"], stats: { exposure: 11180, pdp: 4680, picks: 640, promote: 430, share: 290, createClick: 170, createPublish: 28, createShareDownload: 76 } },
+        { name: "Wide Leg Resort Pants", image: "../museland-demo/assets/placeholder-product.png", price: "$58.00", category: "bottom", isPod: false, tags: ["Picks", "套装"], stats: { exposure: 9340, pdp: 2860, picks: 590, promote: 380, share: 240, createClick: 120, createPublish: 18, createShareDownload: 50 } },
+        { name: "Pleated Satin Skirt", image: "../museland-demo/assets/placeholder-product.png", price: "$52.00", category: "bottom", isPod: false, tags: ["Promote", "通勤"], stats: { exposure: 8720, pdp: 2540, picks: 420, promote: 450, share: 260, createClick: 104, createPublish: 16, createShareDownload: 44 } },
+        { name: "Custom Bloom POD Tee", image: "../museland-demo/assets/placeholder-product.png", price: "$36.00", category: "top", isPod: true, tags: ["POD", "AI Create", "已发布"], stats: { exposure: 7680, pdp: 2160, picks: 360, promote: 310, share: 280, createClick: 620, createPublish: 180, createShareDownload: 340 } },
+        { name: "Creator Pattern Tote", image: "../museland-demo/assets/placeholder-product.png", price: "$32.00", category: "bottom", isPod: true, tags: ["POD", "印花设计", "Share/Download"], stats: { exposure: 6480, pdp: 1880, picks: 310, promote: 220, share: 250, createClick: 540, createPublish: 132, createShareDownload: 360 } },
+        { name: "Muse Floral Hoodie", image: "../museland-demo/assets/placeholder-product.png", price: "$64.00", category: "top", isPod: true, tags: ["POD", "高转化", "Publish"], stats: { exposure: 5820, pdp: 1720, picks: 280, promote: 260, share: 190, createClick: 460, createPublish: 154, createShareDownload: 270 } }
+      ],
+      charts: {
+        users: {
+          "注册用户数": [820, 980, 1150, 1090, 1320, 1460, 1580, 1710, 1650, 1890, 2050, 2210],
+          "登录用户数": [640, 760, 820, 900, 980, 1100, 1080, 1210, 1280, 1370, 1490, 1580]
+        },
+        effect: {
+          "GMV": [620000, 810000, 980000, 1260000, 1580000, 1810000, 2140000, 2480000, 2810000, 3140000, 3500000, 3890000],
+          "订单数": [8200, 9600, 11200, 13900, 16800, 20100, 23200, 26800, 30600, 35000, 39800, 45000],
+          "销售件数": [9100, 10600, 12300, 15200, 18600, 22100, 25700, 29100, 33400, 38100, 43200, 48900]
+        }
+      },
+      funnels: {
+        usersPromote: [
+          { title: "推广分享漏斗", steps: [
+            { label: "登录", value: 94280 },
+            { label: "promote", value: 80000 },
+            { label: "share link", value: 70000 },
+            { label: "生成ai素材", value: 56000 }
+          ] }
+        ],
+        usersMuseland: [
+          { title: "Museland 创作漏斗", steps: [
+            { label: "museland浏览", value: 1000 },
+            { label: "设计印花", value: 500 },
+            { label: "发布商品", value: 200 },
+            { label: "生成ai素材", value: 120 },
+            { label: "publish ai素材", value: 80 }
+          ] }
+        ],
+        effect: [
+          { title: "平台成效漏斗", steps: [
+            { label: "点击数", value: 500000 },
+            { label: "浏览数", value: 200000 },
+            { label: "checkout结账数", value: 100000 },
+            { label: "购买次数", value: 50000 }
+          ] }
+        ]
+      }
+    };
+
+    const infoTips = {
+      "较上一周期": "当前筛选时间范围与上一段同等时间范围相比的变化。",
+      "数据最后更新时间": "看板数据最近一次刷新或同步完成的时间。",
+      "过滤访客": "开启后仅统计登录用户；关闭后包含未登录访客。",
+      "GMV": "当前筛选范围内产生的成交金额总和。",
+      "订单数": "当前筛选范围内产生的订单总数。",
+      "销售件数": "当前筛选范围内售出的商品件数。",
+      "动销商品数": "当前筛选范围内产生销售的商品数量。",
+      "动销率": "动销商品数占上架商品数的比例。",
+      "订单均价": "平均每单成交金额，计算方式为 GMV / 订单数。",
+      "点击数": "推广链路被点击的次数。",
+      "浏览数": "通过推广链路进入商品详情页的浏览次数。",
+      "checkout结账数": "进入结账流程的次数。",
+      "购买次数": "完成购买或下单的次数。",
+      "上一步转化率": "当前漏斗步骤人数或次数 / 上一步人数或次数。",
+      "注册数": "当前筛选范围内新注册的用户数。",
+      "注册率": "访问用户中完成注册的比例。",
+      "登录数": "当前筛选范围内发生登录或活跃访问的用户数。",
+      "用户停留时长": "用户在平台内的平均停留时长。",
+      "注册用户数": "按时间展示新增注册用户的趋势。",
+      "登录用户数": "按时间展示登录用户的趋势。",
+      "活跃picks": "当前筛选范围内发生过 Pick 行为的用户数。",
+      "活跃promote": "当前筛选范围内发生过 Promote 或生成推广链接的用户数。",
+      "活跃pick+promote": "当前筛选范围内 Pick 或 Promote 的用户数。",
+      "用户pick率": "登录用户中发生 Pick 行为的比例。",
+      "活跃ai create": "当前筛选范围内使用过 AI Create 的用户数。",
+      "用户create率": "登录用户中使用 AI Create 的比例。",
+      "活跃生成ai素材": "当前筛选范围内成功生成 AI 素材的用户数。",
+      "活跃publish ai素材": "当前筛选范围内发布过 AI 素材的用户数。",
+      "活跃share/download ai素材": "当前筛选范围内分享或下载 AI 素材的用户数。",
+      "活跃pod浏览": "当前筛选范围内访问过 Museland/POD 模块的用户数。",
+      "活跃pod印花设计": "当前筛选范围内进入或完成 POD 印花设计的用户数。",
+      "活跃发布pod商品": "当前筛选范围内发布过 POD 商品的用户数。",
+      "推广分享漏斗": "从登录到 Promote，再到 Share Link 的用户转化路径。",
+      "登录": "进入推广分享路径的登录用户数。",
+      "promote": "点击 Promote 或生成推广链接的用户数。",
+      "share link": "分享或复制推广链接的用户数。",
+      "生成ai素材": "在对应路径中成功生成 AI 素材的用户数。",
+      "Museland 创作漏斗": "从进入 Museland，到设计印花、发布商品，再到生成和发布 AI 素材的用户转化路径。",
+      "museland浏览": "访问 Museland/POD 模块的用户数。",
+      "设计印花": "进入或完成印花设计的用户数。",
+      "发布商品": "成功发布 Museland/POD 商品的用户数。",
+      "publish ai素材": "发布已生成 AI 素材的用户数。",
+      "上架商品数": "当前处于上架状态、可被用户看到或购买的商品数。",
+      "曝光商品数": "当前筛选范围内获得过曝光的商品数。",
+      "曝光率": "曝光商品数占上架商品数的比例。",
+      "pdp浏览商品数": "当前筛选范围内被用户进入过商品详情页的商品数。",
+      "点击率": "有商品详情页浏览的商品数占曝光商品数的比例。",
+      "picks商品数": "当前筛选范围内被用户 Pick 过的商品数。",
+      "pick率": "被 Pick 商品数占 PDP 浏览商品数的比例。",
+      "promote商品数": "当前筛选范围内被用户 Promote 或生成推广链接的商品数。",
+      "share link商品数": "当前筛选范围内被用户分享或复制链接的商品数。",
+      "ai create点击商品数": "当前筛选范围内被用于 AI Create 的商品数。",
+      "create率": "发生 AI Create 点击的商品数占 PDP 浏览商品数的比例。",
+      "ai create publish商品数": "当前筛选范围内通过 AI Create 产物完成发布的商品数。"
+    };
+
+    function formatNumber(value, suffix = "", decimals = 0) {
+      const number = Number(value);
+      return number.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      }) + suffix;
+    }
+
+    function escapeAttr(value) {
+      return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+
+    function infoIcon(label) {
+      const info = infoTips[label];
+      if (!info) return "";
+      return `<span class="info-tip" data-info="${escapeAttr(info)}" aria-label="${escapeAttr(info)}">i</span>`;
+    }
+
+    function labelWithInfo(label) {
+      return `<span class="label-with-info"><span>${label}</span>${infoIcon(label)}</span>`;
+    }
+
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+    function pad2(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function toDateInputValue(date) {
+      return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+    }
+
+    function formatDateTime(date) {
+      return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}-${pad2(date.getMinutes())}-${pad2(date.getSeconds())}`;
+    }
+
+    function updateLastUpdatedTime(date = new Date()) {
+      document.getElementById("lastUpdatedTime").textContent = formatDateTime(date);
+    }
+
+    function addDays(date, days) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next;
+    }
+
+    function addMonths(date, months) {
+      const next = new Date(date);
+      next.setMonth(next.getMonth() + months);
+      return next;
+    }
+
+    function formatMonthLabel(date) {
+      return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+    }
+
+    function quarterOf(date) {
+      return Math.floor(date.getMonth() / 3) + 1;
+    }
+
+    function timeRangeOptions(period) {
+      const today = new Date();
+      if (period === "month") {
+        return Array.from({ length: 12 }, (_, index) => {
+          const date = addMonths(new Date(today.getFullYear(), today.getMonth(), 1), -index);
+          const value = `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+          return { value, label: formatMonthLabel(date) };
+        });
+      }
+      if (period === "quarter") {
+        const currentQuarterStartMonth = (quarterOf(today) - 1) * 3;
+        const currentQuarter = new Date(today.getFullYear(), currentQuarterStartMonth, 1);
+        return Array.from({ length: 4 }, (_, index) => {
+          const date = addMonths(currentQuarter, -index * 3);
+          return { value: `${date.getFullYear()}-Q${quarterOf(date)}`, label: `${date.getFullYear()}年Q${quarterOf(date)}` };
+        });
+      }
+      if (period === "year") {
+        return [
+          { value: `${today.getFullYear()}`, label: `${today.getFullYear()}年` },
+          { value: "recent-1y", label: "最近1年" }
+        ];
+      }
+      return [];
+    }
+
+    function currentPeriodLabel() {
+      if (["month", "quarter", "year"].includes(state.period)) {
+        const selected = timeRangeOptions(state.period).find((option) => option.value === state.timeRangeValue);
+        return selected ? selected.label : periodLabels[state.period];
+      }
+      if (state.period === "custom" && state.customStart && state.customEnd) {
+        return `${state.customStart} 至 ${state.customEnd}`;
+      }
+      return periodLabels[state.period];
+    }
+
+    function periodFactor() {
+      if (state.period !== "custom") return multiplier[state.period] || 1;
+      if (!state.customStart || !state.customEnd) return multiplier["7d"];
+      const start = new Date(state.customStart);
+      const end = new Date(state.customEnd);
+      const days = Math.max(1, Math.round((end - start) / MS_PER_DAY) + 1);
+      return Math.min(1, days / 365);
+    }
+
+    function scaled(value) {
+      return value * periodFactor();
+    }
+
+    function userVisitorFactor(affected = true) {
+      return state.filterVisitors && affected ? .82 : 1;
+    }
+
+    function effectScaled(value) {
+      return scaled(value) * effectFilters[state.effectFilter].factor;
+    }
+
+    function valueFor(group, value) {
+      return group === "effect" ? effectScaled(value) : scaled(value);
+    }
+
+    function cardValueFor(target, card) {
+      const baseValue = card.fixed ? card.value : valueFor(target, card.value);
+      return target === "users" ? baseValue * userVisitorFactor(card.visitorAffected) : baseValue;
+    }
+
+    function selectedProductCategoryKeys() {
+      return state.productCategories.includes("all") ? Object.keys(productCategories).filter((key) => key !== "all") : state.productCategories;
+    }
+
+    function productCategoryLabel() {
+      if (state.productCategories.includes("all")) return productCategories.all.label;
+      return state.productCategories.map((key) => productCategories[key].label).join("、");
+    }
+
+    function productFilterLabel() {
+      return state.podOnly ? `${podProductFilter.label} · ${productCategoryLabel()}` : productCategoryLabel();
+    }
+
+    function productCategoryFactor() {
+      const categoryFactor = state.productCategories.includes("all")
+        ? 1
+        : state.productCategories.reduce((sum, key) => sum + productCategories[key].factor, 0);
+      return state.podOnly ? categoryFactor * podProductFilter.factor : categoryFactor;
+    }
+
+    function productRateFactor() {
+      const keys = selectedProductCategoryKeys();
+      const categoryRateFactor = keys.reduce((sum, key) => sum + productCategories[key].rateFactor, 0) / keys.length;
+      return state.podOnly ? categoryRateFactor * podProductFilter.rateFactor : categoryRateFactor;
+    }
+
+    function productCardValue(card) {
+      if (card.fixed) return card.value * productRateFactor();
+      if (card.periodIndependent) return card.value * productCategoryFactor();
+      return scaled(card.value) * productCategoryFactor();
+    }
+
+    function rateValueFor(target, card) {
+      return target === "products" ? card.rateValue * productRateFactor() : card.rateValue;
+    }
+
+    function rateBadge(card, target) {
+      if (!card.rateLabel) return "";
+      return `<span class="metric-rate">${card.rateLabel} ${formatNumber(rateValueFor(target, card), card.rateSuffix, card.rateDecimals)}${infoIcon(card.rateLabel)}</span>`;
+    }
+
+    function scaleSeries(group, series) {
+      const selectedPeriodFactor = periodFactor();
+      const filterFactor = state.activeMetric.effect && Object.values(base.charts.effect).includes(series) ? effectFilters[state.effectFilter].factor : 1;
+      const grainFactor = state.grain === "week" ? 4.8 : state.grain === "month" ? 18 : 1;
+      const step = state.grain === "day" ? 1 : state.grain === "week" ? 2 : 3;
+      const visitorFactor = group === "users" && state.filterVisitors && series !== base.charts.users["注册用户数"] && series !== base.charts.users["登录用户数"] ? .82 : 1;
+      return series
+        .filter((_, index) => index % step === 0)
+        .map((value) => Math.max(1, value * selectedPeriodFactor * grainFactor * filterFactor * visitorFactor));
+    }
+
+    function labelsFor(length) {
+      if (state.grain === "day") return Array.from({ length }, (_, index) => `${index + 1}日`);
+      if (state.grain === "week") return Array.from({ length }, (_, index) => `第${index + 1}周`);
+      return Array.from({ length }, (_, index) => `${index + 1}月`);
+    }
+
+    function renderCards(target, cards) {
+      const el = document.querySelector(`[data-cards="${target}"]`);
+      el.innerHTML = cards.map((card) => `
+        <article class="metric-card">
+          <div class="metric-label">
+            ${labelWithInfo(card.label)}
+            <span>${target === "effect" ? effectFilters[state.effectFilter].label : currentPeriodLabel()}</span>
+          </div>
+          <div class="metric-value-line">
+            <div class="metric-value">${formatNumber(cardValueFor(target, card), card.suffix, card.decimals)}</div>
+            ${rateBadge(card, target)}
+          </div>
+          <div class="metric-note">${card.note || `${card.change} 较上一周期`}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderProductCategoryFilter() {
+      document.getElementById("productCategoryLabel").textContent = productCategoryLabel();
+      document.getElementById("podOnlyToggle").checked = state.podOnly;
+      const el = document.getElementById("productCategoryMenu");
+      el.innerHTML = Object.entries(productCategories).map(([key, category]) => `
+        <label class="dropdown-option">
+          <input type="checkbox" data-product-category="${key}" ${state.productCategories.includes(key) ? "checked" : ""} />
+          <span>${category.label}</span>
+        </label>
+      `).join("");
+    }
+
+    function normalizeCustomRange() {
+      const today = new Date();
+      const minDate = addDays(today, -365);
+      const max = toDateInputValue(today);
+      const min = toDateInputValue(minDate);
+      const startInput = document.getElementById("customStartDate");
+      const endInput = document.getElementById("customEndDate");
+      startInput.min = min;
+      startInput.max = max;
+      endInput.min = min;
+      endInput.max = max;
+
+      if (!state.customStart) state.customStart = toDateInputValue(addDays(today, -6));
+      if (!state.customEnd) state.customEnd = max;
+      if (state.customStart < min) state.customStart = min;
+      if (state.customEnd > max) state.customEnd = max;
+      if (state.customStart > state.customEnd) state.customStart = state.customEnd;
+
+      const start = new Date(state.customStart);
+      const end = new Date(state.customEnd);
+      if ((end - start) / MS_PER_DAY > 365) {
+        state.customStart = toDateInputValue(addDays(end, -365));
+      }
+
+      startInput.value = state.customStart;
+      endInput.value = state.customEnd;
+    }
+
+    function renderTimeControls() {
+      const detail = document.getElementById("timeDetail");
+      const select = document.getElementById("timeRangeSelect");
+      const startInput = document.getElementById("customStartDate");
+      const separator = document.getElementById("customDateSeparator");
+      const endInput = document.getElementById("customEndDate");
+      const hasPresetOptions = ["month", "quarter", "year"].includes(state.period);
+      const isCustom = state.period === "custom";
+
+      detail.classList.toggle("show", hasPresetOptions || isCustom);
+      select.hidden = !hasPresetOptions;
+      startInput.hidden = !isCustom;
+      separator.hidden = !isCustom;
+      endInput.hidden = !isCustom;
+
+      if (hasPresetOptions) {
+        const options = timeRangeOptions(state.period);
+        if (!options.some((option) => option.value === state.timeRangeValue)) {
+          state.timeRangeValue = options[0]?.value || "";
+        }
+        select.innerHTML = options.map((option) => `
+          <option value="${option.value}" ${option.value === state.timeRangeValue ? "selected" : ""}>${option.label}</option>
+        `).join("");
+      }
+
+      if (isCustom) normalizeCustomRange();
+    }
+
+    function renderProductCards() {
+      const el = document.querySelector('[data-cards="products"]');
+      const groups = [...new Set(base.productCards.map((card) => card.group))];
+      el.innerHTML = groups.map((group) => `
+        <section class="product-card-group">
+          <h3>${group}</h3>
+          <div class="cards">
+            ${base.productCards.filter((card) => card.group === group).map((card) => `
+              <article class="metric-card">
+                <div class="metric-label">
+                  ${labelWithInfo(card.label)}
+                  <span>${productFilterLabel()}</span>
+                </div>
+                <div class="metric-value-line">
+                  <button class="metric-value metric-value-button" type="button" data-product-metric="${card.label}">
+                    ${formatNumber(productCardValue(card), card.suffix, card.decimals)}
+                  </button>
+                  ${rateBadge(card, "products")}
+                </div>
+                <div class="metric-note">${card.change} 较上一周期</div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function productsForCurrentCategory(metric) {
+      const selected = base.products.filter((product) => {
+        const categoryMatched = state.productCategories.includes("all") || state.productCategories.includes(product.category);
+        return categoryMatched && (!state.podOnly || product.isPod);
+      });
+      return [...selected].sort((a, b) => metricSortValue(b, metric) - metricSortValue(a, metric));
+    }
+
+    function metricSortValue(product, metric) {
+      const stats = product.stats;
+      const clickRate = stats.exposure ? stats.pdp / stats.exposure * 100 : 0;
+      const pickRate = stats.pdp ? stats.picks / stats.pdp * 100 : 0;
+      const createRate = stats.pdp ? stats.createClick / stats.pdp * 100 : 0;
+      const map = {
+        "上架商品数": stats.exposure,
+        "曝光商品数": stats.exposure,
+        "pdp浏览商品数": stats.pdp,
+        "picks商品数": stats.picks,
+        "promote商品数": stats.promote,
+        "share link商品数": stats.share,
+        "ai create点击商品数": stats.createClick,
+        "ai create publish商品数": stats.createPublish,
+        "ai create share+download商品数": stats.createShareDownload,
+        "商品曝光率": stats.exposure,
+        "商品点击率": clickRate,
+        "商品pick率": pickRate,
+        "商品create率": createRate
+      };
+      return map[metric] || stats.exposure;
+    }
+
+    function productRates(product) {
+      const stats = product.stats;
+      return {
+        clickRate: stats.exposure ? stats.pdp / stats.exposure * 100 : 0,
+        pickRate: stats.pdp ? stats.picks / stats.pdp * 100 : 0,
+        createRate: stats.pdp ? stats.createClick / stats.pdp * 100 : 0
+      };
+    }
+
+    function renderProductModal(metric) {
+      const modal = document.getElementById("productModal");
+      const products = productsForCurrentCategory(metric);
+      document.getElementById("productModalTitle").textContent = metric;
+      document.getElementById("productModalMeta").textContent = `${currentPeriodLabel()} · ${productFilterLabel()} · 按${metric}降序 · ${products.length} 个商品`;
+      document.getElementById("productList").innerHTML = `
+        <table class="product-table">
+          <thead>
+            <tr>
+              <th>商品信息</th>
+              <th>类目</th>
+              <th>标签</th>
+              <th>曝光</th>
+              <th>PDP浏览商品数</th>
+              <th>Pick次数</th>
+              <th>Promote次数</th>
+              <th>Share Link次数</th>
+              <th>AI Create点击</th>
+              <th>AI Publish</th>
+              <th>AI Share/Download</th>
+              <th>商品点击率</th>
+              <th>商品Pick率</th>
+              <th>商品Create率</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map((product) => {
+              const rates = productRates(product);
+              return `
+                <tr>
+                  <td>
+                    <div class="product-info">
+                      <img src="${product.image}" alt="${product.name}" />
+                      <div>
+                        <strong>${product.name}</strong>
+                        <span>${product.price}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>${productCategories[product.category].label}</td>
+                  <td><div class="product-tags">${product.tags.map((tag) => `<small>${tag}</small>`).join("")}</div></td>
+                  <td>${formatNumber(product.stats.exposure)}</td>
+                  <td>${formatNumber(product.stats.pdp)}</td>
+                  <td>${formatNumber(product.stats.picks)}</td>
+                  <td>${formatNumber(product.stats.promote)}</td>
+                  <td>${formatNumber(product.stats.share)}</td>
+                  <td>${formatNumber(product.stats.createClick)}</td>
+                  <td>${formatNumber(product.stats.createPublish)}</td>
+                  <td>${formatNumber(product.stats.createShareDownload)}</td>
+                  <td>${formatNumber(rates.clickRate, "%", 1)}</td>
+                  <td>${formatNumber(rates.pickRate, "%", 1)}</td>
+                  <td>${formatNumber(rates.createRate, "%", 1)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+      modal.hidden = false;
+    }
+
+    function closeProductModal() {
+      document.getElementById("productModal").hidden = true;
+    }
+
+    function renderUserCardGroups() {
+      const el = document.querySelector("[data-user-card-groups]");
+      el.innerHTML = base.usersCardGroups.filter((group) => group.key === state.userTab).map((group) => `
+        <section class="user-card-group">
+          <h3>${group.title}</h3>
+          <div class="cards">
+            ${group.cards.map((card) => `
+              <article class="metric-card">
+                <div class="metric-label">
+                  ${labelWithInfo(card.label)}
+                  <span>${currentPeriodLabel()}</span>
+                </div>
+                <div class="metric-value">${formatNumber(cardValueFor("users", card), card.suffix, card.decimals)}</div>
+                <div class="metric-note">${card.note || `${card.change} 较上一周期`}</div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function renderUserTabs() {
+      document.querySelectorAll("#userViewTabs button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.userTab === state.userTab);
+      });
+      document.querySelectorAll("[data-user-panel]").forEach((panel) => {
+        panel.hidden = panel.dataset.userPanel !== state.userTab;
+      });
+    }
+
+    function renderTabs(group) {
+      const container = document.querySelector(`[data-tabs="${group}"]`);
+      const names = Object.keys(base.charts[group]);
+      container.innerHTML = names.map((name) => `
+        <button class="${state.activeMetric[group] === name ? "active" : ""}" data-group="${group}" data-metric="${name}">${name}</button>
+      `).join("");
+    }
+
+    function renderChart(group) {
+      const metric = state.activeMetric[group];
+      const rawSeries = base.charts[group][metric];
+      const series = scaleSeries(group, rawSeries);
+      const labels = labelsFor(series.length);
+      const width = 760;
+      const height = 270;
+      const pad = { top: 24, right: 22, bottom: 34, left: 58 };
+      const max = Math.max(...series) * 1.16;
+      const min = 0;
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const x = (i) => pad.left + (plotW / Math.max(series.length - 1, 1)) * i;
+      const y = (v) => pad.top + plotH - ((v - min) / (max - min || 1)) * plotH;
+      const points = series.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+      const area = `${pad.left},${pad.top + plotH} ${points} ${pad.left + plotW},${pad.top + plotH}`;
+      const yTicks = [0, .25, .5, .75, 1].map((rate) => max * rate);
+      const xLabelEvery = Math.max(1, Math.ceil(labels.length / 6));
+
+      document.querySelector(`[data-chart="${group}"]`).innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${metric}">
+          ${yTicks.map((tick) => `
+            <line class="axis" x1="${pad.left}" y1="${y(tick)}" x2="${pad.left + plotW}" y2="${y(tick)}"></line>
+            <text class="axis-label" x="${pad.left - 10}" y="${y(tick) + 4}" text-anchor="end">${formatShort(tick)}</text>
+          `).join("")}
+          <polyline class="series-area" points="${area}"></polyline>
+          <polyline class="series-line" points="${points}"></polyline>
+          ${series.map((value, index) => `
+            <circle class="dot" cx="${x(index)}" cy="${y(value)}" r="4"></circle>
+            ${index === series.length - 1 ? `<text class="value-label" x="${x(index) - 6}" y="${y(value) - 10}" text-anchor="end">${formatShort(value)}</text>` : ""}
+          `).join("")}
+          ${labels.map((label, index) => index % xLabelEvery === 0 ? `
+            <text class="axis-label" x="${x(index)}" y="${height - 10}" text-anchor="middle">${label}</text>
+          ` : "").join("")}
+        </svg>
+      `;
+    }
+
+    function formatShort(value) {
+      if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+      if (value >= 1000) return `${Math.round(value / 1000)}k`;
+      return `${Math.round(value)}`;
+    }
+
+    function renderFunnel(group) {
+      const el = document.querySelector(`[data-funnel="${group}"]`);
+      el.innerHTML = base.funnels[group].map((funnel) => {
+        const first = valueFor(group, funnel.steps[0].value);
+        const rows = funnel.steps.map((step, index) => {
+          const current = valueFor(group, step.value);
+          const prev = index === 0 ? current : valueFor(group, funnel.steps[index - 1].value);
+          const width = Math.max(28, current / first * 100);
+          const rate = index === 0 ? "起点" : `上一步转化率 ${Math.round(current / prev * 100)}%`;
+          return `
+            <div class="funnel-row" style="width:${width}%">
+              <div class="funnel-text">
+                <span class="funnel-name">${step.label}</span>
+                <span class="funnel-value">${formatNumber(current)}</span>
+              </div>
+            </div>
+            <div class="rate">${rate}</div>
+          `;
+        }).join("");
+        return `<div class="funnel-block"><h3 class="panel-title">${labelWithInfo(funnel.title)}</h3><div class="funnel-shape">${rows}</div></div>`;
+      }).join("");
+    }
+
+    function renderAll() {
+      renderTimeControls();
+      renderUserTabs();
+      renderUserCardGroups();
+      renderCards("effect", base.effectCards);
+      renderProductCategoryFilter();
+      renderProductCards();
+      ["users", "effect"].forEach((group) => {
+        renderTabs(group);
+        renderChart(group);
+      });
+      ["usersPromote", "usersMuseland", "effect"].forEach(renderFunnel);
+    }
+
+    function renderModule() {
+      document.querySelectorAll("[data-section]").forEach((section) => {
+        section.hidden = section.dataset.section !== state.module;
+      });
+      document.querySelectorAll("#moduleTabs button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.module === state.module);
+      });
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    document.getElementById("periodTabs").addEventListener("click", (event) => {
+      if (!event.target.matches("button")) return;
+      state.period = event.target.dataset.period;
+      if (["month", "quarter", "year"].includes(state.period)) {
+        state.timeRangeValue = timeRangeOptions(state.period)[0]?.value || "";
+      }
+      document.querySelectorAll("#periodTabs button").forEach((button) => button.classList.toggle("active", button === event.target));
+      renderAll();
+    });
+
+    document.getElementById("timeRangeSelect").addEventListener("change", (event) => {
+      state.timeRangeValue = event.target.value;
+      renderAll();
+    });
+
+    document.getElementById("customStartDate").addEventListener("change", (event) => {
+      state.customStart = event.target.value;
+      normalizeCustomRange();
+      renderAll();
+    });
+
+    document.getElementById("customEndDate").addEventListener("change", (event) => {
+      state.customEnd = event.target.value;
+      normalizeCustomRange();
+      renderAll();
+    });
+
+    document.getElementById("grainTabs").addEventListener("click", (event) => {
+      if (!event.target.matches("button")) return;
+      state.grain = event.target.dataset.grain;
+      document.querySelectorAll("#grainTabs button").forEach((button) => button.classList.toggle("active", button === event.target));
+      renderAll();
+    });
+
+    document.getElementById("moduleTabs").addEventListener("click", (event) => {
+      if (!event.target.matches("button")) return;
+      state.module = event.target.dataset.module;
+      renderModule();
+    });
+
+    document.getElementById("effectFilterTabs").addEventListener("click", (event) => {
+      if (!event.target.matches("button")) return;
+      state.effectFilter = event.target.dataset.effectFilter;
+      document.querySelectorAll("#effectFilterTabs button").forEach((button) => button.classList.toggle("active", button === event.target));
+      renderAll();
+    });
+
+    document.getElementById("userViewTabs").addEventListener("click", (event) => {
+      if (!event.target.matches("button")) return;
+      state.userTab = event.target.dataset.userTab;
+      renderAll();
+    });
+
+    document.getElementById("productCategoryTrigger").addEventListener("click", () => {
+      const menu = document.getElementById("productCategoryMenu");
+      const nextHidden = !menu.hidden;
+      menu.hidden = nextHidden;
+      document.getElementById("productCategoryTrigger").setAttribute("aria-expanded", String(!nextHidden));
+    });
+
+    document.getElementById("productCategoryMenu").addEventListener("change", (event) => {
+      if (!event.target.matches("[data-product-category]")) return;
+      const key = event.target.dataset.productCategory;
+      if (key === "all") {
+        state.productCategories = ["all"];
+      } else {
+        const current = new Set(state.productCategories.filter((item) => item !== "all"));
+        if (event.target.checked) current.add(key);
+        else current.delete(key);
+        state.productCategories = current.size ? [...current] : ["all"];
+      }
+      renderAll();
+    });
+
+    document.getElementById("podOnlyToggle").addEventListener("change", (event) => {
+      state.podOnly = event.target.checked;
+      renderAll();
+    });
+
+    document.addEventListener("click", (event) => {
+      const filter = document.getElementById("productCategoryFilter");
+      if (filter.contains(event.target)) return;
+      document.getElementById("productCategoryMenu").hidden = true;
+      document.getElementById("productCategoryTrigger").setAttribute("aria-expanded", "false");
+    });
+
+    document.getElementById("visitorFilterToggle").addEventListener("change", (event) => {
+      state.filterVisitors = event.target.checked;
+      renderAll();
+    });
+
+    document.body.addEventListener("click", (event) => {
+      const productMetricButton = event.target.closest("[data-product-metric]");
+      if (productMetricButton) {
+        renderProductModal(productMetricButton.dataset.productMetric);
+        return;
+      }
+
+      const button = event.target.closest("[data-metric]");
+      if (!button) return;
+      state.activeMetric[button.dataset.group] = button.dataset.metric;
+      renderAll();
+    });
+
+    document.getElementById("productModalClose").addEventListener("click", closeProductModal);
+
+    document.getElementById("productModal").addEventListener("click", (event) => {
+      if (event.target.id === "productModal") closeProductModal();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeProductModal();
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", () => {
+      updateLastUpdatedTime();
+      renderAll();
+      toast("数据已刷新：当前为演示数据");
+    });
+
+    updateLastUpdatedTime();
+    renderAll();
+    renderModule();
+  </script>
+</body>
+</html>
