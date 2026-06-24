@@ -214,6 +214,29 @@
       padding: 18px 20px 20px;
     }
 
+    .primary-filter {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius);
+      background: #f8fafc;
+      overflow-x: auto;
+    }
+
+    .primary-filter-label {
+      flex: 0 0 auto;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .primary-filter .segmented {
+      flex: 0 0 auto;
+    }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -547,6 +570,24 @@
 
     .funnel-head .panel-title {
       margin: 0;
+    }
+
+    .source-filter-group {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .source-filter-group .dropdown-filter {
+      min-width: 250px;
+    }
+
+    .source-filter-label {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .funnel-filter {
@@ -984,6 +1025,17 @@
         justify-content: flex-start;
       }
 
+      .primary-filter {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .funnel-head,
+      .source-filter-group {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
       .metric-value {
         font-size: 24px;
       }
@@ -1044,6 +1096,15 @@
           <span class="tag">经营结果</span>
         </div>
         <div class="content">
+          <div class="primary-filter">
+            <span class="primary-filter-label">达人类型</span>
+            <div class="segmented" data-creator-type-tabs aria-label="平台成效达人类型">
+              <button class="active" data-creator-type="all">全部达人</button>
+              <button data-creator-type="affiliate">Affiliate达人</button>
+              <button data-creator-type="content">Content达人</button>
+              <button data-creator-type="coCreate">Co-create达人</button>
+            </div>
+          </div>
           <div class="filter-row">
             <div class="segmented" id="effectFilterTabs" aria-label="平台成效筛选">
               <button class="active" data-effect-filter="all">all</button>
@@ -1080,6 +1141,15 @@
           <span class="tag">核心用户数据</span>
         </div>
         <div class="content">
+          <div class="primary-filter">
+            <span class="primary-filter-label">达人类型</span>
+            <div class="segmented" data-creator-type-tabs aria-label="用户维度达人类型">
+              <button class="active" data-creator-type="all">全部达人</button>
+              <button data-creator-type="affiliate">Affiliate达人</button>
+              <button data-creator-type="content">Content达人</button>
+              <button data-creator-type="coCreate">Co-create达人</button>
+            </div>
+          </div>
           <div class="filter-row">
             <label class="toggle-filter">
               <input type="checkbox" id="visitorFilterToggle" checked />
@@ -1100,6 +1170,9 @@
               <div class="chart-tabs" data-tabs="users"></div>
             </div>
             <div class="chart-wrap" data-chart="users"></div>
+          </div>
+          <div class="panel wide-panel user-tab-panel" data-user-panel="login">
+            <div class="funnel" data-funnel="usersRegister"></div>
           </div>
           <div class="grid-3 user-tab-panel" data-user-panel="core" hidden>
             <div class="panel">
@@ -1167,6 +1240,9 @@
       grain: "day",
       module: "effect",
       effectFilter: "all",
+      creatorType: "all",
+      registerSourceSelections: ["all"],
+      registerSourceMenuOpen: false,
       timeRangeValue: "",
       customStart: "",
       customEnd: "",
@@ -1212,6 +1288,21 @@
       product: { label: "商品推广", factor: .52 },
       collection: { label: "Collection推广", factor: .31 },
       museland: { label: "Museland商品推广", factor: .17 }
+    };
+
+    const creatorTypes = {
+      all: { label: "全部达人", factor: 1 },
+      affiliate: { label: "Affiliate达人", factor: .46 },
+      content: { label: "Content达人", factor: .34 },
+      coCreate: { label: "Co-create达人", factor: .2 }
+    };
+
+    const registerSources = {
+      all: { label: "全部" },
+      email: { label: "邮件拉新", factors: [.28, .31, .34, .32, .35, .38] },
+      meta: { label: "Meta投放", factors: [.27, .25, .23, .24, .22, .21] },
+      tiktok: { label: "TikTok投放", factors: [.2, .18, .17, .18, .19, .2] },
+      organic: { label: "自然流", factors: [.25, .26, .26, .26, .24, .21] }
     };
 
     const productCategories = {
@@ -1291,6 +1382,16 @@
         }
       },
       funnels: {
+        usersRegister: [
+          { title: "注册漏斗", sourceFilter: true, steps: [
+            { label: "触达量", value: 600000 },
+            { label: "有效触达量", value: 420000 },
+            { label: "跳转注册落地页", value: 180000 },
+            { label: "成功注册量", value: 128430 },
+            { label: "sharelink量", value: 70000 },
+            { label: "出单量", value: 12000 }
+          ] }
+        ],
         usersPromote: [
           { title: "推广分享漏斗", podToggle: "promoteFunnelPodOnly", podFactor: .17, steps: [
             { label: "登录", value: 94280 },
@@ -1329,6 +1430,13 @@
       "较上一周期": "当前筛选时间范围与上一段同等时间范围相比的变化。",
       "数据最后更新时间": "看板数据最近一次刷新或同步完成的时间。",
       "过滤访客": "开启后仅统计登录用户；关闭后包含未登录访客。",
+      "注册漏斗": "从渠道触达到注册、分享链接并最终出单的用户转化路径。",
+      "触达量": "渠道内容或广告送达的总人数。",
+      "有效触达量": "成功展示且满足有效触达规则的人数。",
+      "跳转注册落地页": "从渠道内容跳转到注册落地页的人数。",
+      "成功注册量": "完成平台注册的人数。",
+      "sharelink量": "注册后创建或分享推广链接的人数。",
+      "出单量": "通过推广链路产生订单的人数。",
       "GMV": "当前筛选范围内产生的成交金额总和。",
       "订单数": "当前筛选范围内产生的订单总数。",
       "销售件数": "当前筛选范围内售出的商品件数。",
@@ -1495,12 +1603,28 @@
       return state.filterVisitors && affected ? .82 : 1;
     }
 
+    function creatorTypeFactor() {
+      return creatorTypes[state.creatorType].factor;
+    }
+
+    function registerSourceLabel() {
+      if (state.registerSourceSelections.includes("all")) return registerSources.all.label;
+      return state.registerSourceSelections.map((key) => registerSources[key].label).join("、");
+    }
+
+    function registerSourceFactor(index) {
+      if (state.registerSourceSelections.includes("all")) return 1;
+      return state.registerSourceSelections.reduce((sum, key) => sum + registerSources[key].factors[index], 0);
+    }
+
     function effectScaled(value) {
-      return scaled(value) * effectFilters[state.effectFilter].factor;
+      return scaled(value) * effectFilters[state.effectFilter].factor * creatorTypeFactor();
     }
 
     function valueFor(group, value) {
-      return group === "effect" ? effectScaled(value) : scaled(value);
+      if (group === "effect") return effectScaled(value);
+      if (group === "users") return scaled(value) * creatorTypeFactor();
+      return scaled(value);
     }
 
     function cardValueFor(target, card) {
@@ -1555,9 +1679,10 @@
       const grainFactor = state.grain === "week" ? 4.8 : state.grain === "month" ? 18 : 1;
       const step = state.grain === "day" ? 1 : state.grain === "week" ? 2 : 3;
       const visitorFactor = group === "users" && state.filterVisitors && series !== base.charts.users["注册用户数"] && series !== base.charts.users["登录用户数"] ? .82 : 1;
+      const creatorFactor = ["users", "effect"].includes(group) ? creatorTypeFactor() : 1;
       return series
         .filter((_, index) => index % step === 0)
-        .map((value) => Math.max(1, value * selectedPeriodFactor * grainFactor * filterFactor * visitorFactor));
+        .map((value) => Math.max(1, value * selectedPeriodFactor * grainFactor * filterFactor * visitorFactor * creatorFactor));
     }
 
     function labelsFor(length) {
@@ -1813,6 +1938,12 @@
       });
     }
 
+    function renderCreatorTypeTabs() {
+      document.querySelectorAll("[data-creator-type]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.creatorType === state.creatorType);
+      });
+    }
+
     function renderTabs(group) {
       const container = document.querySelector(`[data-tabs="${group}"]`);
       const names = Object.keys(base.charts[group]);
@@ -1865,12 +1996,34 @@
       return `${Math.round(value)}`;
     }
 
-    function funnelValue(group, funnel, step) {
+    function funnelValue(group, funnel, step, index) {
       const podFactor = funnel.podToggle && state[funnel.podToggle] ? funnel.podFactor : 1;
-      return valueFor(group, step.value) * podFactor;
+      const sourceFactor = funnel.sourceFilter ? registerSourceFactor(index) : 1;
+      return valueFor(group, step.value) * podFactor * sourceFactor;
     }
 
     function funnelFilterControl(funnel) {
+      if (funnel.sourceFilter) {
+        return `
+          <div class="source-filter-group">
+            <span class="source-filter-label">注册来源</span>
+            <div class="dropdown-filter" data-register-source-filter>
+              <button class="dropdown-trigger" type="button" data-register-source-trigger aria-expanded="${state.registerSourceMenuOpen}">
+                <span>${registerSourceLabel()}</span>
+                <span>⌄</span>
+              </button>
+              <div class="dropdown-menu" data-register-source-menu ${state.registerSourceMenuOpen ? "" : "hidden"}>
+                ${Object.entries(registerSources).map(([key, source]) => `
+                  <label class="dropdown-option">
+                    <input type="checkbox" data-register-source-option="${key}" ${state.registerSourceSelections.includes(key) ? "checked" : ""} />
+                    <span>${source.label}</span>
+                  </label>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        `;
+      }
       if (!funnel.podToggle) return "";
       return `
         <label class="funnel-filter">
@@ -1883,12 +2036,12 @@
     function renderFunnel(group) {
       const el = document.querySelector(`[data-funnel="${group}"]`);
       el.innerHTML = base.funnels[group].map((funnel) => {
-        const first = funnelValue(group, funnel, funnel.steps[0]);
+        const first = funnelValue(group, funnel, funnel.steps[0], 0);
         const rows = funnel.steps.map((step, index) => {
-          const current = funnelValue(group, funnel, step);
-          const prev = index === 0 ? current : funnelValue(group, funnel, funnel.steps[index - 1]);
+          const current = funnelValue(group, funnel, step, index);
+          const prev = index === 0 ? current : funnelValue(group, funnel, funnel.steps[index - 1], index - 1);
           const width = Math.max(28, current / first * 100);
-          const rate = index === 0 ? "起点" : `上一步转化率 ${Math.round(current / prev * 100)}%`;
+          const rate = index === 0 ? "转化率 100%" : `上一步转化率 ${Math.round(current / prev * 100)}%`;
           return `
             <div class="funnel-row" style="width:${width}%">
               <div class="funnel-text">
@@ -1914,6 +2067,7 @@
     function renderAll() {
       renderTimeControls();
       renderUserTabs();
+      renderCreatorTypeTabs();
       renderUserCardGroups();
       renderCards("effect", base.effectCards);
       renderProductCategoryFilter();
@@ -1922,7 +2076,7 @@
         renderTabs(group);
         renderChart(group);
       });
-      ["usersPromote", "usersMuseland", "usersAiCreate", "effect"].forEach(renderFunnel);
+      ["usersRegister", "usersPromote", "usersMuseland", "usersAiCreate", "effect"].forEach(renderFunnel);
     }
 
     function renderModule() {
@@ -1989,6 +2143,19 @@
       renderAll();
     });
 
+    document.body.addEventListener("click", (event) => {
+      const creatorType = event.target.dataset.creatorType;
+      if (creatorType) {
+        state.creatorType = creatorType;
+        renderAll();
+        return;
+      }
+      if (event.target.closest("[data-register-source-trigger]")) {
+        state.registerSourceMenuOpen = !state.registerSourceMenuOpen;
+        renderFunnel("usersRegister");
+      }
+    });
+
     document.getElementById("userViewTabs").addEventListener("click", (event) => {
       if (!event.target.matches("button")) return;
       state.userTab = event.target.dataset.userTab;
@@ -2023,9 +2190,14 @@
 
     document.addEventListener("click", (event) => {
       const filter = document.getElementById("productCategoryFilter");
-      if (filter.contains(event.target)) return;
-      document.getElementById("productCategoryMenu").hidden = true;
-      document.getElementById("productCategoryTrigger").setAttribute("aria-expanded", "false");
+      if (!filter.contains(event.target)) {
+        document.getElementById("productCategoryMenu").hidden = true;
+        document.getElementById("productCategoryTrigger").setAttribute("aria-expanded", "false");
+      }
+      if (!event.target.closest("[data-register-source-filter]") && state.registerSourceMenuOpen) {
+        state.registerSourceMenuOpen = false;
+        renderFunnel("usersRegister");
+      }
     });
 
     document.getElementById("visitorFilterToggle").addEventListener("change", (event) => {
@@ -2034,6 +2206,20 @@
     });
 
     document.body.addEventListener("change", (event) => {
+      const sourceKey = event.target.dataset.registerSourceOption;
+      if (sourceKey) {
+        if (sourceKey === "all") {
+          state.registerSourceSelections = ["all"];
+        } else {
+          const selected = new Set(state.registerSourceSelections.filter((key) => key !== "all"));
+          if (event.target.checked) selected.add(sourceKey);
+          else selected.delete(sourceKey);
+          state.registerSourceSelections = selected.size ? [...selected] : ["all"];
+        }
+        state.registerSourceMenuOpen = true;
+        renderFunnel("usersRegister");
+        return;
+      }
       const toggleKey = event.target.dataset.funnelPodToggle;
       if (!toggleKey) return;
       state[toggleKey] = event.target.checked;
